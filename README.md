@@ -12,26 +12,26 @@ The y coordinate is used for the horizontal axis
 The coordinates increase when moving down and right
 Illustration:
 
-  0 1 2 3   <- y axis
-  0 o o o o
-  1 o o o o
-  2 o # o o    # is at position Pos(2, 1)
-  3 o o o o
-  
-  ^
-  |
-x axis
+    0 1 2 3   <- y axis
+    0 o o o o
+    1 o o o o
+    2 o # o o    # is at position Pos(2, 1)
+    3 o o o o
+    ^
+    |
+    x axis
 
 The Terrain
 We represent our terrain as a function from positions to booleans:
 
-  type Terrain = Pos => Boolean
+    type Terrain = Pos => Boolean
+    
 The function returns true for every position that is inside the terrain. Terrains can be created easily from a string representation using the methods in the file StringParserTerrain.scala.
 
 Your first task is to implement two methods in trait StringParserTerrain that are used to parse the terrain and the start / end positions. The Scaladoc comments give precies instructions how they should be implemented.
 
-  def terrainFunction(levelVector: Vector[Vector[Char]]): Pos => Boolean = ???
-  def findChar(c: Char, levelVector: Vector[Vector[Char]]): Pos = ???
+    def terrainFunction(levelVector: Vector[Vector[Char]]): Pos => Boolean = ???
+    def findChar(c: Char, levelVector: Vector[Vector[Char]]): Pos = ???
 
 Blocks
 ====================
@@ -41,25 +41,27 @@ A Block is therefore a case class Block(b1: Pos, b2: Pos), and can move in four 
 
 Given this, you can now define a method isStanding which tells us whether the Block is standing or not:
 
-  def isStanding: Boolean = ???
+    def isStanding: Boolean = ???
 Next, implement a method isLegal on Block which tells us whether a block is on the terrain or off it:
 
-  def isLegal: Boolean = ???
+    def isLegal: Boolean = ???
 Finally, we need to implement a method that constructs the initial block for our simulation, the block located at the start position:
 
-  def startBlock: Block = ???
+    def startBlock: Block = ???
+    
 Moves and Neighbors
+====================
 To record which moves we make when navigating the block, we represent the four possible moves as case objects:
 
-  sealed abstract class Move
-  case object Left  extends Move
-  case object Right extends Move
-  case object Up    extends Move
-  case object Down  extends Move
+    sealed abstract class Move
+      case object Left  extends Move
+    case object Right extends Move
+    case object Up    extends Move
+    case object Down  extends Move
 You can now implement the functions neighbors and legalNeighbors on Block, which return a list of tuples: the neighboring blocks, as well as the move to get there.
 
-  def neighbors: List[(Block,Move)] = ???
-  def legalNeighbors: List[(Block,Move)] = ???
+    def neighbors: List[(Block,Move)] = ???
+    def legalNeighbors: List[(Block,Move)] = ???
   
 Solving the Game
 ====================
@@ -69,36 +71,35 @@ We could represent a path to a solution as a Stream[Block]. We however also need
 
 First, implement a function done which determines when we have reached the goal:
 
-  def done(b: Block): Boolean = ???
+    def done(b: Block): Boolean = ???
 Finding Neighbors
 
 Then, implement a function neighborsWithHistory, which, given a block, and its history, returns a stream of neighboring blocks with the corresponding moves.
 
-  def neighborsWithHistory(b: Block, history: List[Move]): Stream[(Block, List[Move])] = ???
+    def neighborsWithHistory(b: Block, history: List[Move]): Stream[(Block, List[Move])] = ???
 As mentioned above, the history is ordered so that the most recent move is the head of the list. If you consider Level 1 as defined in Bloxorz.scala, then
 
-  neighborsWithHistory(Block(Pos(1,1),Pos(1,1)), List(Left,Up))
+    eighborsWithHistory(Block(Pos(1,1),Pos(1,1)), List(Left,Up))
 results in a stream with the following elements (given as a set):
 
-  Set(
-    (Block(Pos(1,2),Pos(1,3)), List(Right,Left,Up)),
-    (Block(Pos(2,1),Pos(3,1)), List(Down,Left,Up))
-  )
+    Set(
+      (Block(Pos(1,2),Pos(1,3)), List(Right,Left,Up)),
+      (Block(Pos(2,1),Pos(3,1)), List(Down,Left,Up))
+    )
 You should implement the above example as a test case in the test suite BloxorzSuite.
 
 Avoiding Circles
 ====================
 While exploring a path, we will also track all the blocks we have seen so far, so as to not get lost in circles of movements (such as sequences of left-right-left-right). Implement a function newNeighborsOnly to this effect:
 
-  def newNeighborsOnly(neighbors: Stream[(Block, List[Move])],
-                     explored: Set[Block]): Stream[(Block, List[Move])] = ???
+    def newNeighborsOnly(neighbors: Stream[(Block, List[Move])],explored: Set[Block]): Stream[(Block, List[Move])] = ???
 Example usage:
 
-  newNeighborsOnly(
-    Set(
-     (Block(Pos(1,2),Pos(1,3)), List(Right,Left,Up)),
-     (Block(Pos(2,1),Pos(3,1)), List(Down,Left,Up))
-   ).toStream,
+    newNeighborsOnly(
+      Set(
+      (Block(Pos(1,2),Pos(1,3)), List(Right,Left,Up)),
+      (Block(Pos(2,1),Pos(3,1)), List(Down,Left,Up))
+    ).toStream,
 
     Set(Block(Pos(1,2),Pos(1,3)), Block(Pos(1,1),Pos(1,1)))
   )
@@ -110,10 +111,10 @@ Example usage:
 Again, you should convert this example into a test case.
 
 Finding Solutions
-
+====================
 Now to the crux of the solver. Implement a function from, which, given an initial stream and a set of explored blocks, creates a stream containing the possible paths starting from the head of the initial stream:
 
-  def from(initial: Stream[(Block, List[Move])],
+    def from(initial: Stream[(Block, List[Move])],
          explored: Set[Block]): Stream[(Block, List[Move])] = ???
 Note: pay attention to how the path is constructed: as discussed in the introduction, the key to getting the shortest path for the problem is to explore the space in a breadth-first manner.
 
@@ -123,12 +124,12 @@ Putting Things together
 ====================
 Finally we can define a lazy val pathsFromStart which is a stream of all the paths that begin at the starting block:
 
-  lazy val pathsFromStart: Stream[(Block, List[Move])] = ???
+    lazy val pathsFromStart: Stream[(Block, List[Move])] = ???
 We can also define pathToGoal which is a stream of all possible pairs of goal blocks along with their history. Indeed, there can be more than one road to Rome!
 
-  lazy val pathsToGoal: Stream[(Block, List[Move])] = ???
+    lazy val pathsToGoal: Stream[(Block, List[Move])] = ???
 To finish it off, we define solution to contain the (or one of the) shortest list(s) of moves that lead(s) to the goal.
 
 Note: the head element of the returned List[Move] should represent the first move that the player should perform from the starting position.
 
-  lazy val solution: List[Move] = ???
+    lazy val solution: List[Move] = ???
